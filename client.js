@@ -208,7 +208,7 @@ app.CreatorPlugin.general=function(){
     
       // settingDivW: Add distUnitChoise
     let distUnitChoiseT=new UnitDistChoise();  distUnitChoiseT.querySelector('br').remove(); distUnitChoiseT.prepend(langHtml.DistanceUnit+': ');
-    distUnitChoiseT.css({display:'block','margin':'1em 0em 1em 0.6em'});
+    distUnitChoiseT.css({display:'block'});
     viewSettingEntry.querySelector('#divMapMarker').insertAdjacentElement('afterend', distUnitChoiseT);
 
       //
@@ -550,7 +550,9 @@ app.CreatorPlugin.distNTimePrice=function(){
   
   app.comparePriceDataPopCreator=function(){
     var el=createElement('div');
-    el.toString=function(){return 'comparePriceDataPop';}
+    el.strName='comparePriceDataPop'
+    el.id=el.strName
+    el.toString=function(){return el.strName;}
     el.openFunc=function(extraSaveFuncT){
       inpDist.value=comparePrice.dist;
       inpUnit.value=strUnitDist;
@@ -621,8 +623,8 @@ app.CreatorPlugin.distNTimePrice=function(){
   }
   
   app.viewComparePriceDataPop=comparePriceDataPopCreator();
-  MainDiv.push(viewComparePriceDataPop);
-  arrViewPop.push(viewComparePriceDataPop)
+  //MainDiv.push(viewComparePriceDataPop);
+  MainDivPop.push(viewComparePriceDataPop)
 
 
     // comparePriceButSpan: in settingDivW, infoDivS, tableHead,
@@ -776,8 +778,7 @@ app.CreatorPlugin.distNTimePrice=function(){
 
       // Add ComparePriceButSpan to viewSettingEntry
     var comparePriceButSpan=new ComparePriceButSpan("(<span name=dist> </span> <span name=distUnit> </span>, <span name=time> </span> <span name=timeUnit> </span>)"); comparePriceButSpan.querySelector('button'); //.prepend(langHtml.comparePrice.head+' ');
-    //comparePriceButSpan.css({display:'block','margin':'1em 0em 1em 0.6em'});
-    var divTmp=createElement('div').myAppend(langHtml.comparePrice.head+' ', comparePriceButSpan).css({'margin':'1em 0em 1em 0.6em'});
+    var divTmp=createElement('div').myAppend(langHtml.comparePrice.head+' ', comparePriceButSpan);
     viewSettingEntry.divCont.querySelector('#divMapMarker').insertAdjacentElement('afterend', divTmp);
 
   };
@@ -1733,6 +1734,60 @@ app.CreatorPlugin.programmer=function(){
 "use strict"
 app.funLoad= async function(){
 
+//
+// Theme functions
+//
+
+  // themeOS ∈ ['dark','light']
+  // themeChoise ∈ ['dark','light','system']
+  // themeCalc ∈ ['dark','light']
+window.analysColorSchemeSettings=function(){
+  var themeOS=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"
+  var themeChoise=localStorage.getItem("themeChoise")??"system";
+  var arrThemeChoise=['dark','light','system'];
+  var ind=arrThemeChoise.indexOf(themeChoise);  if(ind==-1) ind=2;
+  var themeChoise=arrThemeChoise[ind]
+  var themeCalc=themeChoise=="system"?themeOS:themeChoise
+  return {themeOS, themeChoise, themeCalc}
+}
+
+var setThemeClass=function(theme){
+  if(theme=='dark') elHtml.setAttribute('data-theme', 'dark'); else elHtml.removeAttribute('data-theme');
+  var strT=theme; if(theme!='dark' && theme!='light') strT='light dark'
+  elHtml.css({'color-scheme':strT});
+}
+
+  // Initial setup of selectorOfTheme
+// var selectorOfTheme=selThemeCreate()
+// elBody.myAppend(selectorOfTheme)
+
+// var {themeOS, themeChoise, themeCalc}=analysColorSchemeSettings();
+// console.log(`OS: ${themeOS}, choise: ${themeChoise}, calc: ${themeCalc}`)
+// setThemeClass(themeCalc)
+// selectorOfTheme.value=themeChoise
+
+  // Listen to prefered-color changes on the OS
+window.colorSchemeQueryListener = window.matchMedia('(prefers-color-scheme: dark)');
+colorSchemeQueryListener.addEventListener('change', function(e) {
+  var {themeOS, themeChoise, themeCalc}=analysColorSchemeSettings();
+  console.log(`OS: ${themeOS}, choise: ${themeChoise}, calc: ${themeCalc}`)
+  setThemeClass(themeCalc)
+});
+
+window.selThemeCreate=function(){
+  var optSystem=createElement('option').myText('Same as OS').prop({value:'system'})
+  var optLight=createElement('option').myText('Light').prop({value:'light'})
+  var optDark=createElement('option').myText('Dark').prop({value:'dark'})
+  var Opt=[optSystem, optLight, optDark]
+  var el=createElement('select').myAppend(...Opt).on('change',function(e){
+    localStorage.setItem('themeChoise', this.value);
+    var {themeOS, themeChoise, themeCalc}=analysColorSchemeSettings();
+    console.log(`OS: ${themeOS}, choise: ${themeChoise}, calc: ${themeCalc}`)
+    setThemeClass(themeCalc)
+  })
+  return el
+}
+
 /*******************************************************************************************************************
  *******************************************************************************************************************
  * Functions used in plugins
@@ -1919,6 +1974,14 @@ app.selSpriteCreator=function(objSprite){
     divMenu.show();
     divMenu.cssChildren(colOff);
     divMenu.querySelector(`div:nth-of-type(${i+1})`).css(colOn);
+    var elPar=el.offsetParent, rect = el.getBoundingClientRect()
+    //var {offsetWidth:wPar, offsetHeight:hPar}=elPar;
+    var {clientWidth:wPar, clientHeight:hPar}=elPar
+    //var {offsetWidth:wEl, offsetHeight:hEl, offsetLeft:xl, offsetTop:yt}=el, {} //, xr=xl+wEl, xc=xl+wEl/2, yb=yt+hEl, yc=yt+hEl/2
+    //var {scrollX, scrollY}=window
+    var {x:xl, width:wEl, right:xr, y:yt, height:hEl, bottom:yb}=rect, xc=xl+wEl/2, yc=yt+hEl/2
+    if(xc>wPar/2) divMenu.css({left:'', right:0}); else divMenu.css({left:xl, right:''});  //wPar-xr
+    if(yc>hPar/2) divMenu.css({top:'', bottom:hEl+'px'}); else divMenu.css({top:yb, bottom:''});
   }
   el.closeFunc=function() {
     divMenu.hide();
@@ -1934,13 +1997,13 @@ app.selSpriteCreator=function(objSprite){
   var mouseOut=function(ele){var tmp=colOff; if(this.i==spriteOnButt.iCur) tmp=colOn; this.css(tmp);}
 
   var colOn={background:'#f92'}, colOff={background:''}, colSel={background:'var(--bg-colorEmp)'};
-  el.css({display:'inline-block',position: 'relative'});
+  el.css({display:'inline-block', position:'relative'}); //position:'relative'
   
   var spriteOnButt=spriteCreator(objSprite);
   el.img=spriteOnButt.img; // Incase one wants to do css operations on the img
 
   var button=createElement('button').myAppend(spriteOnButt).on('click', function(e){   if(el.isOpen()) { el.closeFunc();}  else { openFunc(e);}  });
-  var divMenu=createElement('div').css({position:'absolute',border:'1px solid',background:'#fff',left:0+'px',top:28+'px','z-index':1});
+  var divMenu=createElement('div').css({position:'absolute',border:'1px solid',background:'#fff',left:0+'px',top:28+'px'}); //,'z-index':1
   el.append(button,divMenu);
 
   for(var i=0;i<objSprite.order.length;i++){
@@ -2252,7 +2315,9 @@ var idPLoginCreator=function(){
 
 var viewFormLoginCreator=function(){
   var el=createElement('div')
-  el.toString=function(){return 'viewFormLogin';}
+  el.strName='viewFormLogin'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
 
   el.setUp=function(){
     inpEmail.value='';    inpPass.value='';
@@ -2290,10 +2355,10 @@ var viewFormLoginCreator=function(){
   var messDiv=createElement('div').css({color:'red'});
   var buttForgot=createElement('a').prop({href:''}).myText('Forgot your password?').on('click', function(e){  viewForgottPWPop.openFunc(); e.preventDefault(); });
   var imgH=imgHelp.cloneNode(1).css({'margin-left':'0.6em'}); popupHover(imgH, createElement('div').myText("A new password is generated and sent to the email address."));
-  var divForgot=createElement('div').myAppend(buttForgot, imgH);  //.css({'margin-top':'1em'})
+  var divForgot=createElement('div').myAppend(buttForgot, imgH);
   var butSendLink=createElement('a').prop({href:''}).myText('Login with email link').on('click', sendEmail);
   var imgH=imgHelp.cloneNode(1).css({'margin-left':'0.6em'}); popupHover(imgH, createElement('div').myText("An email is sent with a link which will log you in. Your password is not changed."));
-  var divSendLink=createElement('div').myAppend(butSendLink, imgH);  //.css({'margin-top':'1em'})
+  var divSendLink=createElement('div').myAppend(butSendLink, imgH);
 
   var hr=createElement('hr').css({width:'100%'})
   var buttonCreateAccount=createElement('button').addClass('highStyle').myText('Create an account').on('click', function(){
@@ -2323,7 +2388,9 @@ var divLoginSelectorCreator=function(oRole){
   var el=createElement('div');
   var {strRole, charRoleUC, ind:iRole}=oRole;
   el.iRole=iRole;
-  el.toString=function(){return 'divLoginSelector';}
+  el.strName='divLoginSelector'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
 
   var strButtonSize='2em';
   var imgFb=createElement('img').prop({src:wsFb, alt:"fb"}).on('click', async function(){
@@ -2345,7 +2412,7 @@ var divLoginSelectorCreator=function(oRole){
   });
   imgFb.css({align:'center', display:'block', 'margin': '0.7em auto'}); //     , position:'relative',top:'0.4em',heigth:strButtonSize,width:strButtonSize
 
-  var divHead=createElement('h3').myText('Sign in / Create account').css({'text-align':'center'}); //, margin:0
+  var divHead=createElement('h3').myText('Sign in / Create account').css({'text-align':'center'});
 
   var emailToggleEventF=function(){
     var now=Date.now(); if(now>timeSpecialR+1000*10) {timeSpecialR=now; nSpecialReq=0;}    nSpecialReq++;
@@ -2376,7 +2443,9 @@ var divLoginSelectorCreator=function(oRole){
 
 var viewCreateUserCreator=function(){
   var el=createElement('div')
-  el.toString=function(){return 'viewCreateUser';}
+  el.strName='viewCreateUser'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   var save=function(){
     resetMess();
     var strPassword=inpPass.value.trim();
@@ -2433,9 +2502,9 @@ var viewCreateUserCreator=function(){
   var messDiv=createElement('div').css({color:'red'});
 
   el.divReCaptcha=createElement('div');
-  var buttonVerifyNCreate=createElement('button').myText('Verify email and create account').on('click', save).addClass('flexWidth'); //.css({'margin':'0.5em 0em 0.3em'})
+  var buttonVerifyNCreate=createElement('button').myText('Verify email and create account').on('click', save).addClass('flexWidth');
   var divVerifyNCreate=createElement('div').myAppend(buttonVerifyNCreate)
-  var messEndDiv=createElement('div');  //=createElement('span').css({'margin-left':'.4em'});
+  var messEndDiv=createElement('div');
 
   var divCont=createElement('div').addClass('contDiv').myAppend(h1, el.divDisclaimerW, messDiv,   formCreateAccount, el.divReCaptcha, divVerifyNCreate, messEndDiv);
   divCont.css({display:'flex', 'flex-direction':'column', gap:'0.8em', padding:'0.8em 0'})
@@ -2455,7 +2524,9 @@ var viewCreateUserCreator=function(){
 
 var viewChangePWPopCreator=function(){
   var el=createElement('div')
-  el.toString=function(){return 'viewChangePWPop';}
+  el.strName='viewChangePWPop'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   var save=function(){
     resetMess();
     messDiv.myText('');
@@ -2511,7 +2582,9 @@ var viewChangePWPopCreator=function(){
 
 var viewForgottPWPopCreator=function(){
   var el=createElement('div')
-  el.toString=function(){return 'viewForgottPWPop';}
+  el.strName='viewForgottPWPop'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   var okF=function(){
     var vec=[['verifyPWReset',{email:inpEmail.value.trim()}, okRet]];   majax(vec);
 
@@ -2553,7 +2626,9 @@ var viewForgottPWPopCreator=function(){
 
 var viewConvertIDCreator=function(){
   var el=createElement('div')
-  el.toString=function(){return 'viewConvertID';}
+  el.strName='viewConvertID'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   el.setUp=function(){}
   el.openFunc=function(){
     pendingMess.hide(); cancelMess.hide();
@@ -2637,7 +2712,9 @@ app.butTeamImgCreator=function(oRole){
       // histPHP (server-side): histPHP[buttonNumber]=['name',value], (converts to:) hist[0]=names,  hist[1]=values
 var viewFilterCreator=function(){
   var el=createElement('div');
-  el.toString=function(){return 'viewFilter';}
+  el.strName='viewFilter'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   
   el.setUp=function() {
     var indRole=Number(charRole=='s'), oRole=ORole[indRole];  elRole=ElRole[indRole];
@@ -2740,7 +2817,9 @@ var filterButtonCreator=function(){
 
 var viewSettingEntryCreator=function(){
   var el=createElement('div');
-  el.toString=function(){return 'viewSettingEntry';}
+  el.strName='viewSettingEntry'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   
   
   //var buttShowMarkSelectB=createElement('button').myText(langHtml.Buyers).css({background:oB.strColor, 'margin-left':'0.4em'}).on('click', function(){
@@ -2780,7 +2859,19 @@ var viewSettingEntryCreator=function(){
   var divMapMarkerI=createElement('div').myAppend(...ButtShowMarkSelect).css({display:'flex'});
   var divMapMarker=createElement('div').prop('id','divMapMarker').myText(langHtml.ChangeMapMarkers+':').myAppend(divMapMarkerI);
 
+
+    // Initial setup of selectorOfTheme
+  var selectorOfTheme=selThemeCreate()
+  //elBody.myAppend(selectorOfTheme)
+  var divThemeSelector=createElement('div').myAppend('Theme (Background colors): ', selectorOfTheme);
+
+  var {themeOS, themeChoise, themeCalc}=analysColorSchemeSettings();
+  console.log(`OS: ${themeOS}, choise: ${themeChoise}`)
+  setThemeClass(themeCalc)
+  selectorOfTheme.value=themeChoise
+
   
+    // Settings for logged in users
   var userSettingButton=createElement('button').myText(langHtml.UserSettings).on('click',function(){
     viewUserSetting.setVis(); doHistPush({strView:'viewUserSetting'});
   });
@@ -2791,27 +2882,25 @@ var viewSettingEntryCreator=function(){
     viewComplainer.load();
     viewComplainer.setVis(); doHistPush({strView:'viewComplainer'});
   });
-  //var butts=createFragment(userSettingButton, ...el.userDiv.SettingButton, createElement('br'), complainerButton).cssChildren({margin:'.5em 0.1em'});
   var h=createElement('p').myText("Settings for logged in users").css({'font-weight':'bold'});
   
   el.adminButton=createElement('button').myText('Admin').css({display:'block'}).on('click',function(){
     viewAdmin.setVis(); doHistPush({strView:'viewAdmin'});
   });
-  var divA=createElement('div').myAppend(userSettingButton, ...el.userDiv.SettingButton).css({display:'flex', gap:'0.2em'}); //divA.cssChildren({});
+  var divA=createElement('div').myAppend(userSettingButton, ...el.userDiv.SettingButton).css({display:'flex', gap:'0.2em'}); 
   var divTeam=createElement('div').myAppend(...el.TeamButton).css({display:'flex'});
   el.userDiv.myAppend(h, divA, complainerButton, el.adminButton, divTeam);
-  el.userDiv.css({'background':'var(--bg-colorEmp)', 'border':'solid 1px', 'padding':'0.2em 0', 'margin':'1em 0.6em 1em 0.6em'});
+  el.userDiv.css({'background':'var(--bg-colorEmp)', 'border':'solid 1px', 'padding':'0.2em 0'});
   el.userDiv.cssChildren({margin:'.5em 0.1em'});
   
-  var fragOpt=createFragment(divMapMarker, el.userDiv);
-  fragOpt.cssChildren({'margin':'1em 0em 1em 0.6em'});
+  // var fragOpt=createFragment(divMapMarker, el.divThemeSelector, el.userDiv);
+  var Div=[divMapMarker, divThemeSelector, el.userDiv];
   
   [el.userDiv.SettingButton[0], el.TeamButton[0]].forEach((ele)=>{ele.css({background:oB.strColor}) });
   [el.userDiv.SettingButton[1], el.TeamButton[1]].forEach((ele)=>{ele.css({background:oS.strColor})});
   
 
-  
-  el.divCont=createElement('div').addClass('contDiv').myAppend(fragOpt);
+  el.divCont=createElement('div').addClass('contDiv').myAppend(...Div).css({display:'flex', 'flex-direction':'column', gap:'.8em'});
 
       // divFoot
   var buttonBack=createElement('button').myText(charBack).addClass('fixWidth').on('click', historyBack).css({'margin-left':'0.8em','margin-right':'1em'});
@@ -2829,7 +2918,9 @@ var viewSettingEntryCreator=function(){
 
 var viewUserSettingCreator=function(){
   var el=createElement('div');
-  el.toString=function(){return 'viewUserSetting';}
+  el.strName='viewUserSetting'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
 
   el.setUp=function(){
     var tmp=userInfoFrDB.user;
@@ -2888,7 +2979,7 @@ var viewUserSettingCreator=function(){
     // keyRemoteControl
   var strHelp="Copy this to the remote controller.";
   var imgH=imgHelp.cloneNode(1).css({'margin-left':'0.6em', 'margin-right':'0.6em'}); popupHover(imgH,createElement('div').myText(strHelp));
-  //var aLink=createElement('a').myText('link to trackerControl').prop({href:'https://emagnusandersson.github.io/trackerControl/'}).css({'margin-left':'0.4em'});
+  //var aLink=createElement('a').myText('link to trackerControl').prop({href:'https://emagnusandersson.github.io/trackerControl/'});
   var spanKeyRemoteControl=createElement('textarea').attr({readonly:1}).css({'font-size':'0.8em', 'padding':'0.1em', 'user-select':'none', width:'100%', display:'block', overflow:'hidden', resize:'none'});
   var inpKeyRemoteControl=createElement('input')
   var generateF=function(){
@@ -2921,8 +3012,7 @@ var viewUserSettingCreator=function(){
   var deleteDiv=createElement('div').myAppend(butDelete); //,imgH
 
   var Div=[divIPSetting, divPW, divDisplayName, divSelectImageIdPOrCustom, divBoWebPushOK, divKeyRemoteControl, deleteDiv];  //, divBoGeoWatch
-  //Div.forEach(ele=>ele.css({'margin-top':'1em'}));
-  Div.forEach(ele=>ele.css({'margin-top':'.3em', padding:'0.5em', background:'var(--bg-colorEmp)', 'box-shadow':'0 0 0.3em 0.1em var(--border-color) inset'}));
+  Div.forEach(ele=>ele.css({'margin-top':'.3em', padding:'0.5em', background:'var(--bg-colorEmp)'})); /*, 'box-shadow':'0 0 0.3em 0.1em var(--border-color) inset'*/
   divIPSetting.css({background:'var(--bg-colorEmp)'})
 
   //Div.forEach((ele,i)=>{if(i%2==0)ele.css({background:'lightgrey'})});
@@ -3004,7 +3094,9 @@ var divIPSettingCreator=function(){  // Div in userSettingDiv
 
 var viewDeleteAccountPopCreator=function(){
   var el=createElement('div');
-  el.toString=function(){return 'viewDeleteAccountPop';}
+  el.strName='viewDeleteAccountPop'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   var butYes=createElement('button').myText(langHtml.Yes).on('click', function(){
     //var vec=[['UDelete',1,function(data){historyBack();historyBack();}]];   majax(vec);
     sessionLoginIdP={};  userInfoFrDB=extend({}, userInfoFrDBZero);
@@ -3083,7 +3175,6 @@ var settingCreator=function(oRole){
     [...Tmp].forEach( (ele)=>ele.on( 'keypress', function(e){ if(e.which==13) {el.save();return false;} } ) );
     var Tmp=el.querySelectorAll('input[type=number]'); 
     [...Tmp].forEach( (ele)=>ele.prop({min:0}) );
-    //[...el.querySelectorAll('input,select')].forEach( (ele)=>ele.css({'float':'right',clear:'both'}) );
 
     var checkBoxes=el.querySelectorAll('input[type=checkbox]');
     //var tmp=boAndroid?{'-webkit-transform':'scale(2,2)'}:{width:'1.4em',height:'1.4em'};
@@ -3118,7 +3209,9 @@ var settingCreator=function(oRole){
 
 var viewSettingCreator=function(){
   var el=createElement('div');
-  el.toString=function(){return 'viewSetting';}
+  el.strName='viewSetting'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   el.setUp=function(){
     var indRole=Number(charRole=='s'), oRole=ORole[indRole], oRoleAlt=ORole[1-indRole], elRoleAlt=ElRole[1-indRole];
     elRole=ElRole[indRole];
@@ -3136,7 +3229,7 @@ var viewSettingCreator=function(){
   var save=function(){ elRole.save();}
   var elRole;
   var ElRole=[];   for(var i=0;i<2;i++){ElRole[i]=settingCreator(ORole[i]); }
-  var divCont=createElement('div').addClass('contDiv').myAppend(...ElRole);
+  var divCont=createElement('div').addClass('contDivFix').myAppend(...ElRole); //.css({'padding-bottom':'4em'});
   el.ElRole=ElRole;
   
     // divFoot
@@ -3146,11 +3239,11 @@ var viewSettingCreator=function(){
   var buttonBack=createElement('button').myText(charBack).addClass('fixWidth').on('click', historyBack).css({'margin-left':'0.8em','margin-right':'1em'});
   var spanRole=createElement('span');
   var spanLab=createElement('span').myAppend(spanRole).addClass('footDivLabel');
-  var divFoot=createElement('div').myAppend(buttonBack, roleToggler, buttonSave, spanLab).addClass('footDiv');
+  var divFoot=createElement('div').myAppend(buttonBack, roleToggler, buttonSave, spanLab).addClass('footDivFix');
 
   el.myAppend(divCont, divFoot);
 
-  el.css({'text-align':'left', display:"flex","flex-direction":"column"});
+  el.addClass('viewDivFix').css({'overflow':'scroll'});; // .css({'text-align':'left'}); //, display:"flex","flex-direction":"column"
   return el;
 }
 
@@ -3170,8 +3263,8 @@ app.spanIdTeamWantedCreator=function(oRole){
     var idTeam=userInfoFrDB[strRole].idTeam; spanDisNApproved.toggle(idTmp!=idTeam);
   }
   var inp=createElement('input').prop({'type':'number', min:0}).css({width:'3em'});
-  var thumbDis=createElement('img').prop({alt:"team"}).css({'vertical-align':'middle','margin':'0 0.4em'}); //'float':'right',clear:'both'
-  var spanDisNApproved=createElement('span').myText(langHtml.NotYetApproved).css({'vertical-align':'middle','margin-right':'0.4em', 'white-space':'nowrap'}); //'float':'right',clear:'both'
+  var thumbDis=createElement('img').prop({alt:"team"}).css({'vertical-align':'middle','margin':'0 0.4em'});
+  var spanDisNApproved=createElement('span').myText(langHtml.NotYetApproved).css({'vertical-align':'middle','margin-right':'0.4em', 'white-space':'nowrap'});
   el.myAppend(thumbDis, spanDisNApproved, inp);
   el.css({display:'flex', 'align-items':'center'});
   el.inp=inp; return el;
@@ -3181,7 +3274,9 @@ app.spanIdTeamWantedCreator=function(oRole){
 
 var viewAdminCreator=function(){
   var el=createElement('div');
-  el.toString=function(){return 'viewAdmin';}
+  el.strName='viewAdmin'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   el.setUp=function(data){
     //boShowTeam=Boolean(Number(data.boShowTeam)); inpBoShowTeam.prop({checked:boShowTeam});
     //for(var i=0;i<ORole.length;i++){
@@ -3223,7 +3318,9 @@ var viewAdminCreator=function(){
 var viewTeamCreator=function(oRole){
   var el=createElement('div');
   var {strRole, charRoleUC, ind:iRole}=oRole;
-  el.toString=function(){return 'viewTeam'+charRoleUC;}
+  el.strName='viewTeam'+charRoleUC
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   el.setUp=function(boShow){
     elId.value='';  elLink.value='';
     var vec=[['teamLoad',{iRole},disLoadRet]];   majax(vec);
@@ -3308,7 +3405,9 @@ var viewTeamCreator=function(oRole){
 
 var divEntryBarCreator=function(el){
   //var el=createElement('div');
-  el.toString=function(){return 'entryButtonDiv';}
+  el.strName='entryButtonDiv'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   
   var entryButtonLabel=createElement('div').myText(langHtml.AppearOnTheMap).css({'font-weight':'bold'}).addClass('unselectable');
   var cssBut={width:'initial','font-weight':'bold', padding:'0.2em', height:"auto", 'min-height':'1.8rem', margin:'0 2px'};
@@ -3348,7 +3447,6 @@ var divLoginInfoCreator=function(){
     //el.css({visibility:''});
   }
   var spanName=createElement('span').myText('.'), spanKind=createElement('span').myText('.').css({'margin-left':'.4em', 'margin-right':'0.4em'});
-  //var logoutButt=createElement('a').prop({href:''}).myText(langHtml.divLoginInfo.logoutButt).css({'float':'right'});
   var logoutButt=createElement('button').myText(langHtml.divLoginInfo.logoutButt).css({'margin-left':'auto'});
   logoutButt.on('click', function(){
     sessionLoginIdP={}; userInfoFrDB=extend({}, userInfoFrDBZero);
@@ -3371,7 +3469,9 @@ var divLoginInfoCreator=function(){
 var viewEntryCreator=function(oRole){
   var el=createElement('div');
   var {strRole, charRoleUC}=oRole;
-  el.toString=function(){return 'viewEntry'+charRoleUC;}
+  el.strName='viewEntry'+charRoleUC
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   el.setUp=function(){
     //var nTmp=strRole=='buyer'?nBuyerReal:nSellerReal;
     //var nNext=nTmp+1; //if(nNext==13) nNext=14;
@@ -3427,7 +3527,6 @@ var viewEntryCreator=function(oRole){
   
   el.teamApprovedMess=createElement('div').css({display:'block'}).myText(`Team/brand not approved, Contact ${domainName} to become approved.`);
   var Divs=[divOrdinal, divLoginSelector, pWiki, buttLoginTeam, el.teamApprovedMess];
-  Divs.forEach(ele=>ele.css({})); //'margin':'1em 0em 1em 0.6em'
   
     // , NoteYouCanDeleteYourAccount  FBToPreventMultipleAccounts, NothingIsWrittenToYourFBFlow, YouCanUseCustomImage, , langSpan, NoteYouCanDeleteYourAccount
     
@@ -3453,7 +3552,9 @@ var viewEntryCreator=function(oRole){
 var viewIntroCreator=function(oRole){
   var el=createElement('div');
   var {charRole, strRole, charRoleUC}=oRole;
-  el.toString=function(){return 'viewIntro'+charRoleUC;}
+  el.strName='viewIntro'+charRoleUC
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   var save=function(){ 
     ga('send', 'event', 'button', 'click', 'introCont');
     resetMess();  
@@ -3540,7 +3641,7 @@ var viewIntroCreator=function(oRole){
 
   var saveButton=createElement('button').myText(langHtml.CreateAccount).on('click', save).css({display:'block', margin:'0 auto'});
   //el.myAppend(head, pBread, secName, divSelectImageIdPOrCustom, pBread2, secBoWebPushOK, secTel, secEmail, pBread3, saveButton).css({padding:'0.5em'}); //   , secEmail  , 'font-size':'90%'
-  var divBottom=createElement('div').myAppend(saveButton); //.css({'margin-bottom':'1em'})
+  var divBottom=createElement('div').myAppend(saveButton);
   
   var divCont=createElement('div').addClass('contDiv').myAppend(head, pBread, secName, divSelectImageIdPOrCustom, pBread2, secBoWebPushOK, secTel, secEmail, pBread3, divBottom);
   divCont.css({display:"flex","flex-direction":"column", gap:'1em', padding:'0.8em 0', background: 'var(--bg-color)'});
@@ -3695,7 +3796,9 @@ var divSelectTeamImageCreator=function(oRole){  // Selector between default-imag
 
 var viewComplaintCommentPopCreator=function(){
   var el=createElement('div');
-  el.toString=function(){return 'viewComplaintCommentPop';}
+  el.strName='viewComplaintCommentPop'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   el.openFunc=function(idComplaineeT){
     idComplainee=idComplaineeT; spanIdComplainee.myText(idComplaineeT);
 
@@ -3730,8 +3833,8 @@ var viewComplaintCommentPopCreator=function(){
   var save=createElement('button').myText(langHtml.Save).on('click', function(){sendFunc();});
   var del=createElement('button').myText(langHtml.vote.deleteComplaint).on('click', function(){comment.value=''; sendFunc();});
   var cancel=createElement('button').myText(langHtml.Cancel).on('click', historyBack);
-  var butts=createElement('div').myAppend(cancel, del, save); //.cssChildren({margin:'0.5em 0'});
-  butts.css({display:'flex', gap:'0.4em', 'justify-content':'space-between'});
+  var divBut=createElement('div').myAppend(cancel, del, save);
+  divBut.css({display:'flex', gap:'0.4em', 'justify-content':'space-between'});
   var labAnswer=createElement('label').myText(langHtml.vote.answer+': ').css({margin:'0.5em 0em 0.2em','font-weight':'bold'}); labAnswer.hide();
   var answer=createElement('div');
   var secAnswer=createElement('div').myAppend(labAnswer, answer);
@@ -3739,7 +3842,7 @@ var viewComplaintCommentPopCreator=function(){
   el.css({'text-align':'left', border:'1px solid'});
 
   var blanket=createElement('div').addClass("blanket");
-  var centerDiv=createElement('div').myAppend(secComment, butts, secAnswer).addClass("Center-Flex");
+  var centerDiv=createElement('div').myAppend(secComment, divBut, secAnswer).addClass("Center-Flex");
   //centerDiv.css({padding:'1em', display:'flex', 'flex-direction':'column'});  //, width:'min(95%,40em)', height:'min(98%,40em)'
   centerDiv.css({display:'flex', gap:'1em', 'flex-direction':'column', 'justify-content':'space-between'});
 
@@ -3751,7 +3854,9 @@ var viewComplaintCommentPopCreator=function(){
 
 var viewComplaintAnswerPopCreator=function(){
   var el=createElement('div');
-  el.toString=function(){return 'viewComplaintAnswerPop';}
+  el.strName='viewComplaintAnswerPop'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   el.openFunc=function(idT){
     idComplainer=idT;  spanIdComplainer.myText(idT);
     var o1={idComplainer}, vec=[['complaintOneGet',o1,complaintAnswerOneGet]];   majax(vec);
@@ -3792,13 +3897,13 @@ var viewComplaintAnswerPopCreator=function(){
   var save=createElement('button').myText(langHtml.Save).on('click', function(){sendFunc();});
   var del=createElement('button').myText(langHtml.vote.deleteAnswer).on('click', function(){answer.value=''; sendFunc();});
   var cancel=createElement('button').myText(langHtml.Cancel).on('click', historyBack);
-  var butts=createElement('div').myAppend(cancel, del, save); //.cssChildren({margin:'0.5em 0'});
-  butts.css({display:'flex', gap:'0.4em', 'justify-content':'space-between'});
+  var divBut=createElement('div').myAppend(cancel, del, save);
+  divBut.css({display:'flex', gap:'0.4em', 'justify-content':'space-between'});
 
   el.css({'text-align':'left', border:'1px solid'});
 
   var blanket=createElement('div').addClass("blanket");
-  var centerDiv=createElement('div').myAppend(secComment,secAnswer,butts).addClass("Center-Flex");
+  var centerDiv=createElement('div').myAppend(secComment,secAnswer,divBut).addClass("Center-Flex");
   centerDiv.css({display:'flex', gap:'1em', 'flex-direction':'column', 'justify-content':'space-between'});
 
   el.addClass("Center-Container-Flex").myAppend(centerDiv,blanket);
@@ -3810,7 +3915,9 @@ var viewComplaintAnswerPopCreator=function(){
 
 var viewComplaineeCreator=function(){    // Complaints on a certain complainee
   var el=createElement('div');
-  el.toString=function(){return 'viewComplainee';}
+  el.strName='viewComplainee'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   el.setUp=function(oRoleT, rowComplainee){
     //var id=rMTab.idUser;
     oRole=oRoleT; el.indRole=oRole.ind;
@@ -3904,7 +4011,7 @@ var viewComplaineeCreator=function(){    // Complaints on a certain complainee
   var offset=0,rowCount=20;
   el.boLoaded=0; //el.idComplainee;
   var tab=[], imgComplainee=createElement('img').prop({alt:"complainee"}).css({'vertical-align':'middle'}), nameSpan=createElement('span'), spanRole=createElement('span');
-  var complaineeInfo=createElement('div').myAppend(spanRole,': ',imgComplainee,' ',nameSpan).css({'margin':'0.5em',display:'inline-block', 'float':'right'}); //,'float':'right'
+  var complaineeInfo=createElement('div').myAppend(spanRole,': ',imgComplainee,' ',nameSpan).css({'margin':'0.5em',display:'inline-block', 'float':'right'});
   var bub=createElement('div').myText(langHtml.writeComplaintPopup);
   var imgH=imgHelp.cloneNode(1).css({'margin-left':'0.6em'});  popupHover(imgH,bub);
 
@@ -3929,7 +4036,9 @@ var viewComplaineeCreator=function(){    // Complaints on a certain complainee
 
 var viewComplainerCreator=function(){  // Complaints from a certain Complainer
   var el=createElement('div');
-  el.toString=function(){return 'viewComplainer';}
+  el.strName='viewComplainer'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   el.setUp=function(objArg){
     var {idComplainer:idTmp, image, displayName}=objArg;
     idComplainer=idTmp;
@@ -4151,7 +4260,9 @@ var viewInfoCreator=function(oRole){ // All the detailed info of a user.
   var el=createElement('div');
   var {strRole, Prop, charRoleUC}=oRole, {StrProp, StrGroup, StrGroupFirst}=oRole.Main;
   el.indRole=oRole.ind;
-  el.toString=function(){return 'viewInfo'+charRoleUC;}
+  el.strName='viewInfo'+charRoleUC
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   el.setContainers=function(arg){ // arg is iMTab or rowMTab
     var boMTab=typeof arg=='number';
     if(boMTab) { var iMTab=arg, rowMTab=oRole.MTab[iMTab]; } else rowMTab=arg;
@@ -4930,8 +5041,9 @@ var mapDivCreator=function(){
  **********************************************/
  
 var viewFrontCreator=function(el){
-  //var el=createElement('div');
-  el.toString=function(){return 'viewFront';}
+  el.strName='viewFront'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   
   
     // quickDiv
@@ -5189,7 +5301,9 @@ var markSelectorCreator=function(oRole){
 
 var viewMarkSelectorCreator=function(){
   var el=createElement('div');
-  el.toString=function(){return 'viewMarkSelector';}
+  el.strName='viewMarkSelector'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   el.setUp=function() {  
     var indRole=Number(charRole=='s'), oRole=ORole[indRole];  elRole=ElRole[indRole];
     divFoot.css({background:oRole.strColor});
@@ -5292,7 +5406,9 @@ var columnSelectorCreator=function(oRole){
 
 var viewColumnSelectorCreator=function(){
   var el=createElement('div');
-  el.toString=function(){return 'viewColumnSelector';}
+  el.strName='viewColumnSelector'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   el.setUp=function() {
     var indRole=Number(charRole=='s'), oRole=ORole[indRole];  elRole=ElRole[indRole];
     divFoot.css({background:oRole.strColor});
@@ -5311,7 +5427,7 @@ var viewColumnSelectorCreator=function(){
   el.ElRole=ElRole;
   
       // divFoot
-  var roleToggler=roleTogglerCreator(el).css({'margin':'0 auto', padding:'0px'}); //'margin':'0 auto', 
+  var roleToggler=roleTogglerCreator(el).css({'margin':'0 auto', padding:'0px'});
   
   var buttDefault=createElement('button').myText(langHtml.Default).on('click', defaultFunc);
   var buttAll=createElement('button').myText(langHtml.All).on('click', allFunc);
@@ -5323,7 +5439,7 @@ var viewColumnSelectorCreator=function(){
     //viewTmp.setVis();    doHistPush({strView:viewTmp.toString()});
     viewColumnSorter.setVis();    doHistPush({strView:'viewColumnSorter'});
   });
-  var buttonBack=createElement('button').myText(charBack).css({'margin-left':'0.8em'}).addClass('fixWidth').on('click', historyBack); //,'margin-right':'1em'
+  var buttonBack=createElement('button').myText(charBack).css({'margin-left':'0.8em'}).addClass('fixWidth').on('click', historyBack);
   //var tmpImg=createElement('img').prop({src:wsColumn16}).css({height:'1em',width:'1em','vertical-align':'text-bottom', 'margin-right':'0.5em'});
   var imgT=imgColumnProt.cloneNode().css({'margin-right':'0.5em'});
   var spanRole=createElement('span');
@@ -5416,7 +5532,9 @@ var dragSorterCreator=function(cbMouseup){
 
 var viewColumnSorterCreator=function(){
   var el=createElement('div');
-  el.toString=function(){return 'viewColumnSorter';}
+  el.strName='viewColumnSorter'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   el.setUp=function(){
     var indRole=Number(charRole=='s'); oRole=ORole[indRole];
     arrLabel.length=0;  for(var i=0;i<oRole.ColsShow.length;i++){ arrLabel[i]=calcLabel(langHtml.prop, oRole.ColsShow[i]);  }
@@ -5528,7 +5646,7 @@ var tHeadLabelCreator=function(oRole){
   var r=createElement("tr"), boAsc=false, thSorted=null;
 
   //var tmpImg=createElement('img').prop({src:wsColumn16, alt:"column"}).css({height:'1rem',width:'1rem','vertical-align':'text-bottom'});
-  var imgT=imgColumnProt.cloneNode();  //.css({'margin-right':'0.5em'});
+  var imgT=imgColumnProt.cloneNode();
   var butSel=createElement('button').prop('title',langHtml.AddRemoveColumns).addClass('fixWidth').myAppend(imgT).on('click', function(){
     //var i=oRole.ind;  ViewColumnSelector[i].setVis();  doHistPush({strView:ViewColumnSelector[i].toString()});
     viewColumnSelector.setVis();  doHistPush({strView:'viewColumnSelector'});
@@ -5547,8 +5665,10 @@ var tHeadLabelCreator=function(oRole){
 var tableCreator=function(oRole){
   var el=createElement('div');
   var {StrProp, StrGroup, StrGroupFirst}=oRole.Main;
-  var {ind:iRole}=oRole;
-  el.toString=function(){return 'table'+oRole.charRoleUC;}
+  var {ind:iRole, charRoleUC}=oRole;
+  el.strName='table'+charRoleUC
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   el.setIndex=function(){  for(var i=0;i<arrRow.length;i++){var tmp=arrRow[i].querySelector('[name=index]'); if(tmp) tmp.myText(i);} }
   el.setRowDisp=function(){
     var arrT=[...tBody.querySelectorAll('tr')], arrShow=arrT.slice(0, oRole.nMTab), arrHide=arrT.slice(oRole.nMTab, maxList);
@@ -5670,7 +5790,9 @@ var tableCreator=function(oRole){
 
 var viewTableCreator=function(){
   var el=createElement('div');
-  el.toString=function(){return 'viewTable';}
+  el.strName='viewTable'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   el.setUp=function(){
     var indRole=Number(charRole=='s'), oRole=ORole[indRole];  elRole=ElRole[indRole];
     divFoot.css({background:oRole.strColor});
@@ -5739,7 +5861,9 @@ var viewTableCreator=function(){
 
 var viewChatCreator=function(){
   var el=createElement('div');
-  el.toString=function(){return 'viewChat';}
+  el.strName='viewChat'
+  el.id=el.strName
+  el.toString=function(){return el.strName;}
   el.initMyWebPush=function(){ 
     
     app.myWebPush=new MyWebPush();
@@ -5818,7 +5942,6 @@ var viewChatCreator=function(){
   }).css({display:'block'});
   var divDisabledMess=createElement('div').css({'background':'lightgrey'});
 
-  //.cssChildren({'margin':'1em 0em 1em 0.6em'});;
    
   var divRemember=createElement('div').myText(langHtml.YouCanNotReceivePushNotifications)
 
@@ -6205,8 +6328,9 @@ app.wsDecreasing=wseImageFolder+'decreasingFlip.png';
 app.wsUnsorted="";//uEmptyImage
 app.wsBusy=wseImageFolder+'busy.gif';
 app.wsBusyLarge=wseImageFolder+'busyLarge.gif';
-app.wsList16=wseImageFolder+'list16.png';  
-app.srcsetList=`${wsList16} 1x, ${wsList16} 2x, ${wsList16} 3x `;
+var wsList16=wseImageFolder+'list16.png';  
+var wsList16_2x=wseImageFolder+'list16_2x.png';  
+app.srcsetList=`${wsList16} 1x, ${wsList16_2x} 2x `;
 //app.wsList32=wseImageFolder+'list32.png';
 //app.wsList48=wseImageFolder+'list48.png';
 //app.wsSetting1=wseImageFolder+'setting1.png';
@@ -6214,8 +6338,12 @@ app.wsFilter=wseImageFolder+'filter.png';
 //app.wsEqualizer=wseImageFolder+'equalizer.png';
 app.wsMapm1=wseImageFolder+'mapm1.png';
 app.wsMapm2=wseImageFolder+'mapm2.png';
-app.wsColumn16=wseImageFolder+'column16.png';
-app.wsColumnSort16=wseImageFolder+'columnSort16.png';
+var wsColumn16=wseImageFolder+'column16.png';
+var wsColumn16_2x=wseImageFolder+'column16_2x.png';
+app.srcsetColumn16=`${wsColumn16} 1x, ${wsColumn16_2x} 2x `;
+var wsColumnSort16=wseImageFolder+'columnSort16.png';
+var wsColumnSort16_2x=wseImageFolder+'columnSort16_2x.png';
+app.srcsetColumnSort16=`${wsColumnSort16} 1x, ${wsColumnSort16_2x} 2x `;
 app.wsMarkerMe=wseImageFolder+'markerMe.gif';
 app.wsMarkerMe2=wseImageFolder+'markerMe_2.gif';
 app.wsMarkerOpponent=wseImageFolder+'markerOpponent.gif';
@@ -6513,8 +6641,8 @@ elBody.append(busyLarge);
 
 var imgFilterProt=createElement('img').prop({src:wsFilter, alt:"filter"}).addClass('invertOnDark').css({height:'1em',width:'1em','vertical-align':'text-bottom'});
 var imgListProt=createElement('img').prop({srcset:srcsetList, alt:"list"}).addClass('invertOnDark').css({height:'1em',width:'1em','vertical-align':'text-bottom'});
-var imgColumnProt=createElement('img').prop({src:wsColumn16, alt:"column"}).addClass('invertOnDarkBright').css({height:'1rem',width:'1rem','vertical-align':'text-bottom'});
-var imgColumnSort16Prot=createElement('img').prop({src:wsColumnSort16}).addClass('invertOnDarkBright').css({height:'1em',width:'1em','vertical-align':'text-bottom'});
+var imgColumnProt=createElement('img').prop({srcset:srcsetColumn16, alt:"column"}).addClass('invertOnDarkBright').css({height:'1rem',width:'1rem','vertical-align':'text-bottom'});
+var imgColumnSort16Prot=createElement('img').prop({srcset:srcsetColumnSort16}).addClass('invertOnDarkBright').css({height:'1em',width:'1em','vertical-align':'text-bottom'});
 
 app.merProj=new MercatorProjection();
 
@@ -6669,13 +6797,14 @@ if(boTouch) h1.detach(); else h1.show();
 viewFront.querySelector('noscript').detach();
 
 
-MainDiv.push(viewFront, viewUserSetting, viewDeleteAccountPop, viewAdmin, viewComplainee, viewComplainer, viewComplaintCommentPop, viewComplaintAnswerPop, viewFormLogin, viewConvertID, viewCreateUser, viewChangePWPop, viewForgottPWPop, viewSettingEntry, viewColumnSorter, viewColumnSelector, viewTable, viewMarkSelector, viewFilter, viewSetting, viewChat); // , viewUploadImagePop
-MainDiv.push(...ViewTeam, ...ViewEntry, ...ViewInfo, ...ViewIntro);
+MainDivFull.push(viewFront, viewUserSetting, viewAdmin, viewComplainee, viewComplainer, viewFormLogin, viewConvertID, viewCreateUser, viewSettingEntry, viewColumnSorter, viewColumnSelector, viewTable, viewMarkSelector, viewFilter, viewSetting, viewChat, ...ViewTeam, ...ViewEntry, ...ViewInfo, ...ViewIntro);
+MainDivPop.push(viewDeleteAccountPop, viewComplaintCommentPop, viewComplaintAnswerPop, viewChangePWPop, viewForgottPWPop); // , viewUploadImagePop
+var MainDiv=[].concat(MainDivFull, MainDivPop)
+
 var StrMainDiv=MainDiv.map(obj=>obj.toString());
 var StrMainDivFlip=array_flip(StrMainDiv);
 
-arrViewPop.push(viewDeleteAccountPop, viewComplaintCommentPop, viewComplaintAnswerPop, viewChangePWPop, viewForgottPWPop);  //, viewUploadImagePop
-AMinusB(MainDiv, arrViewPop).forEach(ele=>ele.addClass('mainDiv'));
+MainDivFull.forEach(ele=>ele.addClass('mainDiv'));
 viewTable.css({'max-width':'none'});
 
 //history.StateOpen[history.state.ind]={strView:strStateOrg};
@@ -6687,48 +6816,31 @@ elBody.append(...MainDiv);
 
 var setMainView=function(view){   MainDiv.forEach(ele=>{var boOn=ele===view; ele.toggle(boOn)});   }
 
-var scalableTog=function(boOn){
-  if(typeof boOn=='undefined') boOn=document.body.style.opacity!=0.9999;
-  var floatOpacity=boOn?1:0.9999;
-  var strVPContent='width=device-width, initial-scale=1, '+(boOn?'maximum-scale=4':'maximum-scale=1, user-scalable=no');
-  //$('meta[name=viewport]').attr('content', strVPContent);
-  document.querySelector('head>meta[name=viewport]').attr('content', strVPContent);
-  document.body.style.opacity=floatOpacity;
-  //setTimeout(function(){ document.body.style.opacity = 1;  }, 1);
-}
-var scalableTog=function(){}
 
 viewFront.setVis=function(){
   setMainView(this);
-  //$('meta[name=viewport]').prop({'user-scalable':'false'});
-  scalableTog(0);
   mapDiv.dispatchEvent(new Event('myResize'));
   return true;
 }
 viewTable.setVis=function(){
   setMainView(this);
   this.setUp();
-  //$('meta[name=viewport]').prop({'user-scalable':'true'});
-  scalableTog(1);
   return true;
 }
 viewFilter.setVis=function(){
   setMainView(this);
   this.setUp();
-  scalableTog(1);
   return true;
 }
 viewUserSetting.setVis=function(){
   if(!userInfoFrDB.user) return false;
   setMainView(this);
   this.setUp();
-  scalableTog(1);
   return true;
 }
 viewSetting.setVis=function(){
   setMainView(this);
   this.setUp();
-  scalableTog(1);
   return true;
 }
 viewInfoB.setVis=
@@ -6736,7 +6848,6 @@ viewInfoS.setVis=function(){
   if(this.boLoaded==0) return false;
   setMainView(this);
   this.listCtrlDivW.append(ListCtrlDiv[this.indRole]);
-  scalableTog(1);
   return true;
 }
 viewComplainee.setVis=function(){
@@ -6744,95 +6855,80 @@ viewComplainee.setVis=function(){
   setMainView(this);
   ListCtrlDiv[1-this.indRole].detach();
   this.listCtrlDivW.append(ListCtrlDiv[this.indRole]);
-  scalableTog(1);
   return true;
 }
 viewComplainer.setVis=function(){
   if(this.boLoaded==0) return false;
   setMainView(this);
-  scalableTog(1);
   return true;
 }
 viewAdmin.setVis=function(){
   setMainView(this);
-  scalableTog(1);
   return true;
 }
 viewEntryB.setVis=
 viewEntryS.setVis=function(){
   setMainView(this);
   this.setUp();
-  scalableTog(1);
   return true;
 }
 viewFormLogin.setVis=function(){
   setMainView(this);
   this.setUp();
-  scalableTog(1);
   return true;
 }
 viewCreateUser.setVis=function(){
   setMainView(this);
   this.setUp();
-  scalableTog(1);
   return true;
 }
 viewConvertID.setVis=function(){
   setMainView(this);
   this.setUp();
-  scalableTog(1);
   return true;
 }
 viewSettingEntry.setVis=function(){
   setMainView(this);
   this.setUp();
-  scalableTog(1);
   return true;
 }
 //viewColumnSelectorB.setVis=
 viewColumnSelector.setVis=function(){
   setMainView(this);
   this.setUp();
-  scalableTog(1);
   return true;
 }
 //viewColumnSorterB.setVis=
 viewColumnSorter.setVis=function(){
   setMainView(this);
   this.setUp();
-  scalableTog(1);
   return true;
 }
 //viewMarkSelectorB.setVis=
 viewMarkSelector.setVis=function(){
   setMainView(this);
   this.setUp();
-  scalableTog(1);
   return true;
 }
 viewTeamB.setVis=
 viewTeamS.setVis=function(){
   if(this.boLoaded==0) return false;
   setMainView(this);
-  scalableTog(1);
   return true;
 }
 viewChat.setVis=function(){
   setMainView(this);
-  scalableTog(1);
   this.setUpB();
   return true;
 }
 //viewLogin.setVis=function(){
   //setMainView(this);
-  //scalableTog(1);
   //return true;
 //}
 viewIntroB.setVis=
 viewIntroS.setVis=function(){
   setMainView(this);
   this.setUp();
-  scalableTog(1);
   return true;
 }
 

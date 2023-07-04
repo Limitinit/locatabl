@@ -1,80 +1,94 @@
 
 
 /*Emp=emphasis*/
-@media (prefers-color-scheme:light) {
-  :root {
-      color-scheme:normal;
-      --bg-colorRoot:white;
-      --bg-color:#eee;
-      --bg-colorEmp:#ddd;
-      --bg-colorImg:lightblue;
-      --bg-green:lightgreen;
-      --bg-red:#ff7f7f;
-      --bg-blue:lightblue;
-      --bg-yellow:yellow;
-      --bg-orange:orange;
-      --text-color:#123;
-      --border-color:#123;
-      --link-external:#36b;
-      --link-external-visited:#636;
-      --invert:0;
-      --bg-seller:lightblue;
-      --bg-buyer:pink;
-  }
-  .boxShadowOn {box-shadow:0 0 0 0.2em lightgreen inset; background-color:#eee; color:limegreen}
-  .boxShadowOff {box-shadow:0 0 0 0.2em darkgrey inset; background-color:#ddd}
+/* @media (prefers-color-scheme:light) */ 
+:root {
+  --bg-colorRoot:white;
+  --bg-color:#eee;
+  --bg-colorEmp:#ddd;
+  --bg-colorImg:lightblue;
+  --bg-green:lightgreen;
+  --bg-red:#ff7f7f;
+  --bg-blue:lightblue;
+  --bg-yellow:yellow;
+  --bg-orange:orange;
+  --text-color:#123;
+  --border-color:#123;
+  --link-external:#36b;
+  --link-external-visited:#636;
+  --color-link:#0000ee;
+  --color-link-visited:#551a8b;
+  --bg-seller:lightblue;
+  --bg-buyer:pink;
+  --invert:0;
+  --border-shadow-color:#191919; --border-lit-color:#666;   /* To make ios buttons look like chrome. */
+
+  --bg-button:#efefef;
+  --bg-input:#fff
+
 }
-@media (prefers-color-scheme:dark) {
-  :root {
-      color-scheme:dark;
-      --bg-colorRoot:#303030;
-      --bg-color:#404040;
-      --bg-colorEmp:#505050; /*Emp=emphasis*/
-      --bg-colorImg:#005470;
-      --bg-green:#007300;
-      --bg-red:#c00020;
-      --bg-blue:#005470;
-      --bg-yellow:#707000;
-      --bg-orange:#b17300;
-      --text-color:#dddddd;
-      --border-color:#dddddd;
-      --link-external:#5487df;
-      --link-external-visited:#b477b4;
-      --invert:1;
-      --bg-seller:#1e8aad;
-      --bg-buyer:#d8566b;
-  }
-  a:link{color:#368cff}
-  a:visited{color:#de41ff}
-  .boxShadowOn {box-shadow:0 0 0 0.2em lightgreen inset; background-color:var(--bg-colorEmp); color:limegreen}
-  .boxShadowOff {box-shadow:0 0 0 0.2em #777 inset; background-color:var(--bg-color); color:darkgrey}
-  .invertOnDark {filter:invert(1)}
-  .invertOnDarkBright {filter:invert(1) brightness(1.4)}
-  
+
+/* @media (prefers-color-scheme:dark) */ 
+[data-theme="dark"] {
+  --bg-colorRoot:#303030;
+  --bg-color:#404040;
+  --bg-colorEmp:#505050; /*Emp=emphasis*/
+  --bg-colorImg:#005470;
+  --bg-green:#007300;
+  --bg-red:#c00020;
+  --bg-blue:#005470;
+  --bg-yellow:#707000;
+  --bg-orange:#b17300;
+  --text-color:#dddddd;
+  --border-color:#dddddd;
+  --link-external:#5487df;
+  --link-external-visited:#b477b4;
+  --color-link:#368cff;
+  --color-link-visited:#de41ff;
+  --bg-seller:#1e8aad;
+  --bg-buyer:#d8566b;
+  --invert:1;
+  --border-shadow-color:#191919; --border-lit-color:grey;
+
+  --bg-button:#6b6b6b;
+  --bg-input:#3b3b3b;
+  background:var(--bg-colorRoot);
+  color:var(--text-color)
 }
+
+.boxShadowOn {box-shadow:0 0 0 0.2em lightgreen inset; background-color:#eee; color:limegreen}
+.boxShadowOff {box-shadow:0 0 0 0.2em darkgrey inset; background-color:#ddd; color:#000}
+.boxShadowOn [data-theme="dark"] {box-shadow:0 0 0 0.2em lightgreen inset; background-color:var(--bg-colorEmp); color:limegreen}
+.boxShadowOff [data-theme="dark"] {box-shadow:0 0 0 0.2em #777 inset; background-color:var(--bg-color); color:darkgrey}
+
 :root {
   color-scheme:light dark;
-  background:var(--bg-colorRoot);
-  /* color:var(--text-color) */
 }
+
+a:link{color:var(--color-link)}
+a:visited{color:var(--color-link-visited)}
+.invertOnDark {filter:invert(var(--invert))}
+.invertOnDarkBright {filter:invert(var(--invert)) brightness(calc(1 + var(--invert) * 0.4))}
 
 
 * {box-sizing:border-box}
 html, body {-webkit-overflow-scrolling:touch}
-body {overscroll-behavior:contain}
+html, body {overscroll-behavior:contain; overflow:auto}
 
   /* Is there really a difference using this. Tested values "100%" and "none" (Used by Chrome, Edge. Not used by Safari, Firefox) */
 /* body {-webkit-text-size-adjust:none} */
 
   /* -webkit-appearance:none is required to make disabled buttons have grey text on Safari. */
 html, body {-webkit-appearance:none; appearance:none}
-select, button, input, input[type=file]::file-selector-button {color:inherit} /* Removing blue text in buttons ... on Safari */
+select, button, input, textarea, input[type=file]::file-selector-button {color:inherit} /* Removing blue text in buttons ... on Safari */
 :disabled {color:grey}
 input, button, textarea, select {font:inherit}  /* Preventing zoom, especially on Safari. */
  
 
 button::-moz-focus-inner {padding:0; border:0} /*Making firefox buttons behave like other browsers (doesn't appear to do any difference)*/
 button {appearance:none; border:solid 1px; border-radius:2px; user-select:none; padding:0 3px}
+input, textarea {background:var(--bg-input)}
+button, select, input[type=file]::file-selector-button {background:var(--bg-button)}
 
 /* emulate center */
 .center {
@@ -116,11 +130,40 @@ tr {border-width:inherit; border-style:inherit}
 tbody,thead {border-width:inherit; border-style:inherit}
 thead {opacity:0.9}
 
-input, textarea, keygen, select, button, isindex {font-family:arial, verdana, helvetica; font-size:inherit}
+input, textarea, select, button {font-family:arial, verdana, helvetica; font-size:inherit} /*keygen, isindex*/
 
 
 input[type=email]:not(:placeholder-shown):invalid {color:red; outline-color:red}
 
+
+/*********************************/
+.viewDivFix {
+  text-align:center;margin:0 auto;
+}
+.contDivFix {
+  width:min(var(--maxWidth),100%);
+  margin:0 auto 3em;
+  text-align:left;
+  display:flex;
+  flex-direction:column;
+  gap:0.2em; 
+}
+.contDivFix>div {background:var(--bg-colorEmp); padding:0.4em 0;}
+.footDivFix {
+  width:min(100vw, var(--maxWidth));;
+  margin:0em auto;
+  border-top:solid 1px;
+  position:fixed;
+  bottom:0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:0.8em;
+  background:var(--bg-color);
+  opacity: 0.9;
+  padding:1.2em 0 0.9em;
+}
+/*********************************/
 
 .contDiv {
   flex:1 1 0;

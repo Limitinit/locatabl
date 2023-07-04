@@ -58,14 +58,7 @@
 // LoginWithEmail, forgottPassword, login (and maybe others): send email regardless if email was found in db.
 // "If the email was in the database, an email was sent."
 
-//["'] *\+ *([a-zA-Z0-9-\.\(\)\[\]_/\+ ]+) *\+ *['"]      ${$1}
-//[`] *\+ *([a-zA-Z0-9-\.\(\)\[\]_/\+]+) *\+ *[`]        ${$1}
-//` *\+ *([a-zA-Z0-9-\.\[\]_/\+]+)               ${$1}`
-//` *\+ *([a-zA-Z0-9-\.\(\)\[\]_/\+]+)           ${$1}`
-//([a-zA-Z0-9-\.\[\]_/\+]+) *\+ *[`]             `${$1}
-//([a-zA-Z0-9-\.\(\)\[\]_/\+]+) *\+ *[`]         `${$1}
-
-// \$\{([^\+\}]+)\+                 }${
+// locatabl must use flex box because ios overscrolls if one don't have overflow:hidden, and if one have overflow:hidden then any view using fix foot will not scroll.
 
 
 // After googling "node.js connect debugger to running process" I found:
@@ -583,8 +576,8 @@ h1.mainH1 { box-sizing:border-box; margin:0em auto; width:100%; border:solid 1px
   Str.push(`<script>
 //var StrMainProt=[];
 //var StrMainProtRole=[];
-var MainDiv=[];
-var arrViewPop=[];
+var MainDivFull=[];
+var MainDivPop=[];
 </script>`);
 
   var keyTmp=`/${siteName}_${leafManifest}`, vTmp=boDbgT?0:CacheUri[keyTmp].eTag;
